@@ -22,11 +22,13 @@ export function Header() {
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                console.log('Closing dropdown - clicked outside');
                 setIsDropdownOpen(false);
             }
         }
 
         if (isDropdownOpen) {
+            console.log('Dropdown is open, adding event listener');
             document.addEventListener('mousedown', handleClickOutside);
         }
 
@@ -36,7 +38,14 @@ export function Header() {
     }, [isDropdownOpen]);
 
     const handleLogout = async () => {
+        console.log('Logout clicked');
         await logout();
+    };
+
+    const handleAvatarClick = () => {
+        console.log('Avatar clicked, current state:', isDropdownOpen);
+        setIsDropdownOpen(!isDropdownOpen);
+        console.log('New state will be:', !isDropdownOpen);
     };
 
     return (
@@ -85,10 +94,11 @@ export function Header() {
                         {/* User Avatar with Dropdown */}
                         <div className="relative" ref={dropdownRef}>
                             <button
-                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                onClick={handleAvatarClick}
                                 className="h-10 w-10 rounded-full bg-cover bg-center border border-[#e1dce4] dark:border-white/10 hover:ring-2 hover:ring-primary/20 transition-all cursor-pointer"
                                 style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuB77iS9MZGy1OzdKxC8bxYgqyH4gdSwCaJ54XJ_-5TqhIU3ElmYAxFRbHm-n2_dM3KIy3yXG1LPMJ-MaoHxNyKS2lywZN9T5Mc8RZE72VWsqRA92C7Gaa8SnErJs6w7vwmVhoGMVc_0i_Y4JJ9HnG652sGc9oQs9CuO0eqz3XoJ9pt3Jn9KyraAuNYmgfPqIy3zzE7B_Yh0ZHQGHjEU4wlQQvVuVJ_zS2vhTRO0ZWpuzKwb_RSVfrNeb-GNCgJHvCSCXwNaz4iUn90f')" }}
                                 aria-label="Menú de usuario"
+                                type="button"
                             />
                             
                             {/* Dropdown Menu */}
