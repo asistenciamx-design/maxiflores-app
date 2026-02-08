@@ -1,6 +1,10 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Maxiflores App - OMS/WMS
 
-## Getting Started
+## Features
+- **Gestión de Pedidos**: Surtido y picking en tiempo real
+- **Inventario**: Control de stock y mermas
+- **Integraciones**: Shopify sync
+- **Auth**: Sistema de login seguro con Logout (v2.1)
 
 First, run the development server:
 
