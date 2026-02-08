@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useTransition } from 'react';
+import { useState, useMemo, useTransition, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Filter, Calendar, Download, CheckCircle, Search, ChevronRight, MoreHorizontal, ShoppingCart, TrendingUp, ClipboardCheck, BarChart2, Check, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -18,6 +18,14 @@ export default function CompromisoClient({ initialRows, initialDate }: { initial
 
     // Local state for rows to enable real-time updates without server roundtrip for every keystroke
     const [rows, setRows] = useState(initialRows);
+
+    // Sync internal date state if URL changes (e.g. from navigation)
+    useEffect(() => {
+        const dateParam = searchParams.get('date');
+        if (dateParam && dateParam !== date) {
+            setDate(dateParam);
+        }
+    }, [searchParams]);
 
     // Update local rows when initialRows changes (e.g. date change)
     useMemo(() => {

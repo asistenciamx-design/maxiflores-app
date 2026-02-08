@@ -9,6 +9,9 @@ export async function updateCommitment(
     date: string, 
     newQty: number
 ) {
+    console.log('--- updateCommitment Called ---');
+    console.log({ commitmentId, varietyId, date, newQty });
+
     const supabase = await createClient();
     
     // Get current user
@@ -53,5 +56,6 @@ export async function updateCommitment(
     }
 
     revalidatePath('/compromiso');
+    console.log('--- updateCommitment Success ---');
     return { success: true };
 }
