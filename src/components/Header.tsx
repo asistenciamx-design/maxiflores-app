@@ -2,8 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Flower, Search, Plus } from 'lucide-react';
+import { Flower, Search, Plus, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { logout } from '@/app/auth/actions';
+import { useState, useRef, useEffect } from 'react';
 
 const navItems = [
     { name: 'Pedidos', href: '/surtido' },
@@ -13,6 +15,29 @@ const navItems = [
 
 export function Header() {
     const pathname = usePathname();
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsDropdownOpen(false);
+            }
+        }
+
+        if (isDropdownOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isDropdownOpen]);
+
+    const handleLogout = async () => {
+        await logout();
+    };
 
     return (
         <header className="bg-white border-b border-[#f2f1f4] sticky top-0 z-50 dark:bg-background-dark dark:border-white/10">
@@ -56,10 +81,28 @@ export function Header() {
                             <Plus className="size-5" />
                             <span className="hidden sm:inline">Nuevo Pedido</span>
                         </button>
-                        <div
-                            className="h-10 w-10 rounded-full bg-cover bg-center border border-[#e1dce4] dark:border-white/10"
-                            style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuB77iS9MZGy1OzdKxC8bxYgqyH4gdSwCaJ54XJ_-5TqhIU3ElmYAxFRbHm-n2_dM3KIy3yXG1LPMJ-MaoHxNyKS2lywZN9T5Mc8RZE72VWsqRA92C7Gaa8SnErJs6w7vwmVhoGMVc_0i_Y4JJ9HnG652sGc9oQs9CuO0eqz3XoJ9pt3Jn9KyraAuNYmgfPqIy3zzE7B_Yh0ZHQGHjEU4wlQQvVuVJ_zS2vhTRO0ZWpuzKwb_RSVfrNeb-GNCgJHvCSCXwNaz4iUn90f')" }}
-                        >
+                        
+                        {/* User Avatar with Dropdown */}
+                        <div className="relative" ref={dropdownRef}>
+                            <button
+                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                className="h-10 w-10 rounded-full bg-cover bg-center border border-[#e1dce4] dark:border-white/10 hover:ring-2 hover:ring-primary/20 transition-all cursor-pointer"
+                                style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuB77iS9MZGy1OzdKxC8bxYgqyH4gdSwCaJ54XJ_-5TqhIU3ElmYAxFRbHm-n2_dM3KIy3yXG1LPMJ-MaoHxNyKS2lywZN9T5Mc8RZE72VWsqRA92C7Gaa8SnErJs6w7vwmVhoGMVc_0i_Y4JJ9HnG652sGc9oQs9CuO0eqz3XoJ9pt3Jn9KyraAuNYmgfPqIy3zzE7B_Yh0ZHQGHjEU4wlQQvVuVJ_zS2vhTRO0ZWpuzKwb_RSVfrNeb-GNCgJHvCSCXwNaz4iUn90f')" }}
+                                aria-label="Menú de usuario"
+                            />
+                            
+                            {/* Dropdown Menu */}
+                            {isDropdownOpen && (
+                                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-[#e1dce4] dark:border-white/10 py-1 z-50">
+                                    <button
+                                        onClick={handleLogout}
+                                        className="w-full px-4 py-2 text-sm text-left text-[#151217] dark:text-white hover:bg-[#f2f1f4] dark:hover:bg-white/5 flex items-center gap-2 transition-colors"
+                                    >
+                                        <LogOut className="size-4" />
+                                        Cerrar Sesión
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
