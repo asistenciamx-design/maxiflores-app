@@ -228,19 +228,6 @@ export default function SurtidoClient({
 
             {/* List with Bulk Actions */}
             <div className="flex flex-col gap-4 pb-20">
-                {/* Bulk Actions Bar */}
-                {selectedOrderIds.size > 0 && (
-                     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#151217] text-white px-6 py-3 rounded-full shadow-2xl z-50 flex items-center gap-6 animate-in slide-in-from-bottom-4 duration-300">
-                        <div className="flex items-center gap-3">
-                            <span className="bg-white text-black text-xs font-bold px-2 py-0.5 rounded-full">{selectedOrderIds.size}</span>
-                            <span className="text-sm font-medium">Elementos seleccionados</span>
-                        </div>
-                        <div className="h-4 w-px bg-white/20"></div>
-                        <button className="text-sm font-bold text-white hover:text-green-400 transition-colors">
-                            Marcar como Completados
-                        </button>
-                    </div>
-                )}
 
                 <div className="flex justify-between items-center px-2">
                     <div className="flex items-center gap-2">
