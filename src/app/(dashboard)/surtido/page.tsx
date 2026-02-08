@@ -59,17 +59,32 @@ export default async function SurtidoPage(props: { searchParams: Promise<{ date?
     
     console.log(`[SurtidoPage] Fetched ${varieties?.length || 0} varieties from database`);
     
+    // Helper functions to extract base product name and variant
+    function extractBaseProductName(fullName: string): string {
+        // Remove variant suffix like " - Estándar", " - Primera", " - Premium"
+        const variantPattern = / - (Estándar|Primera|Premium|Default Title)$/i;
+        return fullName.replace(variantPattern, '').trim();
+    }
+
+    function extractVariantName(fullName: string): string {
+        const match = fullName.match(/ - (Estándar|Primera|Premium)$/i);
+        return match ? match[1] : 'Estándar';
+    }
+    
     // In-Memory Time Filter & Transform
     let totalPackages = 0;
     let activeOrdersCount = 0;
     const activeOrderIds = new Set();
     const uniqueClients = new Set(); // Track unique client names
 
-    // CORRECT APPROACH: Group by VARIETY first, then collect orders for each variety
-    // This ensures each variety shows its correct package count across all orders
-    const varietiesMap = new Map();
+    // NEW APPROACH: Group by BASE PRODUCT NAME (without variant suffix)
+    // This groups all variants (Estándar, Primera, Premium) of the same product together
+    const baseProductsMap = new Map();
     
     varieties?.forEach(v => {
+        const baseName = extractBaseProductName(v.name);
+        const variantName = extractVariantName(v.name);
+        
         // Filter order_items by delivery_date AND creation time
         const validOrderItems = v.order_items.filter((oi: any) => {
             // CRITICAL: Check if orders relation exists
@@ -94,42 +109,53 @@ export default async function SurtidoPage(props: { searchParams: Promise<{ date?
         // Skip varieties with no valid orders for this date/time
         if (validOrderItems.length === 0) return;
 
-        // Calculate total packages for THIS variety across all orders
+        // Calculate total packages for THIS variety (specific variant)
         const totalPackagesForVariety = validOrderItems.reduce((sum, oi: any) => sum + oi.quantity, 0);
         
-        // Collect ALL orders for this variety
-        const ordersForVariety = validOrderItems.map((oi: any) => {
+        // Initialize base product if not exists
+        if (!baseProductsMap.has(baseName)) {
+            baseProductsMap.set(baseName, {
+                id: baseName.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase(),
+                varietyId: v.id,
+                name: baseName,
+                sku: v.sku,
+                image: v.image_url,
+                totalPackages: 0,
+                variantSummary: {},
+                orders: []
+            });
+        }
+        
+        const product = baseProductsMap.get(baseName);
+        
+        // Track variant totals
+        if (!product.variantSummary[variantName]) {
+            product.variantSummary[variantName] = 0;
+        }
+        product.variantSummary[variantName] += totalPackagesForVariety;
+        product.totalPackages += totalPackagesForVariety;
+        
+        // Collect ALL orders for this variant with variant info
+        validOrderItems.forEach((oi: any) => {
             activeOrderIds.add(oi.orders.id);
             uniqueClients.add(oi.orders.client_name);
             
-            return {
+            product.orders.push({
                 id: oi.orders.order_number || `#${oi.orders.id.split('-')[0].toUpperCase()}`,
                 client: oi.orders.client_name,
                 location: oi.orders.location,
-                qty: `${oi.quantity} Paqs`, // Individual order quantity for this variety
+                qty: `${oi.quantity} Paqs`,
+                variant: variantName, // ← NEW: track which variant this order requested
                 totalOrders: 1,
                 vip: oi.orders.is_vip
-            };
+            });
         });
 
         totalPackages += totalPackagesForVariety;
-
-        // Add or update variety in the map
-        if (!varietiesMap.has(v.id)) {
-            varietiesMap.set(v.id, {
-                id: v.id,
-                varietyId: v.id,
-                name: v.name,
-                sku: v.sku,
-                image: v.image_url,
-                totalPackages: totalPackagesForVariety,
-                orders: ordersForVariety
-            });
-        }
     });
 
-    // Convert varieties map to items array for display
-    const items = Array.from(varietiesMap.values());
+    // Convert base products map to items array for display
+    const items = Array.from(baseProductsMap.values());
     
     activeOrdersCount = activeOrderIds.size;
     const uniqueClientsCount = uniqueClients.size;

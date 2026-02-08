@@ -261,6 +261,13 @@ export default function SurtidoClient({
                                 </div>
                                 <div className="flex flex-col text-left">
                                     <h3 className="text-lg font-bold text-[#151217] dark:text-white">{item.name}</h3>
+                                    {item.variantSummary && Object.keys(item.variantSummary).length > 0 && (
+                                        <p className="text-xs text-[#776685] dark:text-gray-400 mt-0.5">
+                                            {Object.entries(item.variantSummary)
+                                                .map(([variant, count]) => `${variant}: ${count}`)
+                                                .join(' • ')}
+                                        </p>
+                                    )}
                                     <p className="text-[#776685] dark:text-gray-400 text-sm">SKU: {item.sku}</p>
                                 </div>
                             </div>
@@ -284,6 +291,7 @@ export default function SurtidoClient({
                                             </th>
                                             <th className="p-4 text-xs font-semibold text-[#776685] dark:text-gray-400 uppercase tracking-wider">Pedido #</th>
                                             <th className="p-4 text-xs font-semibold text-[#776685] dark:text-gray-400 uppercase tracking-wider">Cliente</th>
+                                            <th className="p-4 text-xs font-semibold text-[#776685] dark:text-gray-400 uppercase tracking-wider">Variante</th>
                                             <th className="p-4 text-xs font-semibold text-[#776685] dark:text-gray-400 uppercase tracking-wider">Paquetes</th>
                                             <th className="p-4 text-xs font-semibold text-[#776685] dark:text-gray-400 uppercase tracking-wider text-center">Total</th>
                                             <th className="p-4 text-xs font-semibold text-[#776685] dark:text-gray-400 uppercase tracking-wider text-right">Acción</th>
@@ -307,6 +315,18 @@ export default function SurtidoClient({
                                                         </div>
                                                         <span className="text-xs text-[#776685] dark:text-gray-400 ml-6">{order.location}</span>
                                                     </div>
+                                                </td>
+                                                <td className="p-4">
+                                                    {order.variant && (
+                                                        <span className={cn(
+                                                            "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold",
+                                                            order.variant === 'Premium' && "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
+                                                            order.variant === 'Primera' && "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+                                                            order.variant === 'Estándar' && "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300"
+                                                        )}>
+                                                            {order.variant}
+                                                        </span>
+                                                    )}
                                                 </td>
                                                 <td className="p-4">
                                                     <div className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300 min-w-[80px]">
