@@ -317,20 +317,26 @@ export default function SurtidoClient({
                                                     </div>
                                                 </td>
                                                 <td className="p-4">
-                                                    {order.variant && (
-                                                        <span className={cn(
-                                                            "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold",
-                                                            order.variant === 'Premium' && "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
-                                                            order.variant === 'Primera' && "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
-                                                            order.variant === 'Estándar' && "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300"
-                                                        )}>
-                                                            {order.variant}
-                                                        </span>
-                                                    )}
+                                                    <div className="flex flex-col gap-1 items-start">
+                                                        {order.variants?.map((v: any, idx: number) => (
+                                                            <span key={idx} className={cn(
+                                                                "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold",
+                                                                v.name === 'Premium' && "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
+                                                                v.name === 'Primera' && "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+                                                                v.name === 'Estándar' && "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300"
+                                                            )}>
+                                                                {v.name}
+                                                            </span>
+                                                        ))}
+                                                    </div>
                                                 </td>
                                                 <td className="p-4">
-                                                    <div className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300 min-w-[80px]">
-                                                        {order.qty}
+                                                    <div className="flex flex-col gap-1 items-start">
+                                                        {order.variants?.map((v: any, idx: number) => (
+                                                            <span key={idx} className="text-sm font-medium h-[24px] flex items-center text-[#151217] dark:text-gray-300">
+                                                                {v.quantity} Paqs
+                                                            </span>
+                                                        ))}
                                                     </div>
                                                 </td>
                                                 <td className="p-4 text-center">

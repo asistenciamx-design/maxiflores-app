@@ -121,6 +121,7 @@ export default async function SurtidoPage(props: { searchParams: Promise<{ date?
         const totalPackagesForVariety = validOrderItems.reduce((sum, oi: any) => sum + oi.quantity, 0);
         
         // Initialize base product if not exists
+        // Initialize base product if not exists
         if (!baseProductsMap.has(baseName)) {
             baseProductsMap.set(baseName, {
                 id: baseName.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase(),
@@ -130,7 +131,7 @@ export default async function SurtidoPage(props: { searchParams: Promise<{ date?
                 image: v.image_url,
                 totalPackages: 0,
                 variantSummary: {},
-                orders: []
+                ordersMap: new Map() // Use Map to prevent duplicates across variants
             });
         }
         
@@ -143,27 +144,39 @@ export default async function SurtidoPage(props: { searchParams: Promise<{ date?
         product.variantSummary[variantName] += totalPackagesForVariety;
         product.totalPackages += totalPackagesForVariety;
         
-        // Collect ALL orders for this variant with variant info
+        // Group orders by ID to consolidate variants
         validOrderItems.forEach((oi: any) => {
+            const orderId = oi.orders.order_number || `#${oi.orders.id.split('-')[0].toUpperCase()}`;
+            
+            if (!product.ordersMap.has(orderId)) {
+                product.ordersMap.set(orderId, {
+                    id: orderId,
+                    client: oi.orders.client_name,
+                    location: oi.orders.location,
+                    vip: oi.orders.is_vip,
+                    totalOrders: 1,
+                    variants: []
+                });
+            }
+            
+            const order = product.ordersMap.get(orderId);
+            order.variants.push({
+                name: variantName,
+                quantity: oi.quantity
+            });
+            
             activeOrderIds.add(oi.orders.id);
             uniqueClients.add(oi.orders.client_name);
-            
-            product.orders.push({
-                id: oi.orders.order_number || `#${oi.orders.id.split('-')[0].toUpperCase()}`,
-                client: oi.orders.client_name,
-                location: oi.orders.location,
-                qty: `${oi.quantity} Paqs`,
-                variant: variantName, // ← NEW: track which variant this order requested
-                totalOrders: 1,
-                vip: oi.orders.is_vip
-            });
         });
 
         totalPackages += totalPackagesForVariety;
     });
 
     // Convert base products map to items array for display
-    const items = Array.from(baseProductsMap.values());
+    const items = Array.from(baseProductsMap.values()).map((p: any) => ({
+        ...p,
+        orders: Array.from(p.ordersMap.values())
+    }));
     
     activeOrdersCount = activeOrderIds.size;
     const uniqueClientsCount = uniqueClients.size;
