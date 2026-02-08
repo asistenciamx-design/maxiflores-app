@@ -79,8 +79,45 @@ export default function SurtidoClient({
         });
     };
 
+    const [sortBy, setSortBy] = useState<'packages-desc' | 'name-asc' | 'progress-asc'>('packages-desc');
+    const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
+
+    // Filter and Sort Items
+    const processedItems = [...items].sort((a, b) => {
+        if (sortBy === 'packages-desc') {
+            return b.totalPackages - a.totalPackages;
+        }
+        if (sortBy === 'name-asc') {
+            return a.name.localeCompare(b.name);
+        }
+        if (sortBy === 'progress-asc') {
+             // Mock progress for now, or just use ID as a stable fallback
+            return 0; 
+        }
+        return 0;
+    });
+
+    const toggleSelectAll = () => {
+        if (selectedOrderIds.size === processedItems.length) {
+            setSelectedOrderIds(new Set());
+        } else {
+            const allIds = new Set(processedItems.map(i => i.id));
+            setSelectedOrderIds(allIds);
+        }
+    };
+
+    const toggleSelectItem = (id: string) => {
+        const newSelected = new Set(selectedOrderIds);
+        if (newSelected.has(id)) {
+            newSelected.delete(id);
+        } else {
+            newSelected.add(id);
+        }
+        setSelectedOrderIds(newSelected);
+    };
+
     return (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-6 relative">
             {/* Filter Bar */}
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex flex-col md:flex-row md:items-center gap-4">
                 <div className="flex items-center gap-2 text-primary font-bold min-w-[100px]">
@@ -89,13 +126,13 @@ export default function SurtidoClient({
                 </div>
                 
                 <div className="flex-1 flex flex-col md:flex-row gap-4 items-center">
+                    {/* ... Date/Time Inputs ... */}
                     <div className="relative w-full md:w-auto flex flex-col gap-1">
                         <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1 block">Fecha de Entrega</label>
                         <div className="flex gap-2">
                              <div className="flex bg-slate-100 rounded-lg p-1 gap-1">
                                 <button
                                     onClick={() => setQuickDate(0)}
-                                    // Highlight if selected date is today
                                     className={cn(
                                         "px-3 py-1.5 rounded-md text-xs font-bold transition-all",
                                         date === new Date().toISOString().split('T')[0] 
@@ -107,7 +144,6 @@ export default function SurtidoClient({
                                 </button>
                                 <button
                                     onClick={() => setQuickDate(1)}
-                                     // Highlight if selected date is tomorrow
                                     className={cn(
                                         "px-3 py-1.5 rounded-md text-xs font-bold transition-all",
                                         date === new Date(Date.now() + 86400000).toISOString().split('T')[0]
@@ -128,6 +164,7 @@ export default function SurtidoClient({
                     </div>
                     
                     <div className="flex gap-2 w-full md:w-auto">
+                        {/* Time Inputs */}
                         <div>
                             <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1 block">Desde</label>
                             <input 
@@ -146,6 +183,19 @@ export default function SurtidoClient({
                                 className="block w-full md:w-32 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium focus:ring-primary focus:border-primary outline-none" 
                             />
                         </div>
+                    </div>
+
+                    {/* Sorting Dropdown */}
+                    <div className="w-full md:w-auto">
+                        <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1 block">Ordenar por</label>
+                        <select
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value as any)}
+                            className="block w-full md:w-48 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium focus:ring-primary focus:border-primary outline-none"
+                        >
+                            <option value="packages-desc">Paquetes (Mayor a Menor)</option>
+                            <option value="name-asc">Nombre (A-Z)</option>
+                        </select>
                     </div>
 
                     <div className="flex-1 md:text-right w-full flex justify-end gap-3 items-center">
@@ -176,86 +226,124 @@ export default function SurtidoClient({
                 </div>
             </div>
 
-            <div className="flex flex-col gap-4">
-            {items.map((item) => (
-                <details key={item.id} className="group bg-white dark:bg-surface-dark rounded-xl border border-[#e1dce4] dark:border-white/10 shadow-sm overflow-hidden" open={true}>
-                    <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition-colors select-none">
-                        <div className="flex items-center gap-4 md:gap-6">
-                            <div
-                                className="h-16 w-16 rounded-lg bg-cover bg-center shrink-0 border border-gray-100 dark:border-white/10"
-                                style={{ backgroundImage: `url('${item.image}')` }}
-                            >
-                            </div>
-                            <div className="flex flex-col text-left">
-                                <h3 className="text-lg font-bold text-[#151217] dark:text-white">{item.name}</h3>
-                                <p className="text-[#776685] dark:text-gray-400 text-sm">SKU: {item.sku}</p>
-                            </div>
+            {/* List with Bulk Actions */}
+            <div className="flex flex-col gap-4 pb-20">
+                {/* Bulk Actions Bar */}
+                {selectedOrderIds.size > 0 && (
+                     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#151217] text-white px-6 py-3 rounded-full shadow-2xl z-50 flex items-center gap-6 animate-in slide-in-from-bottom-4 duration-300">
+                        <div className="flex items-center gap-3">
+                            <span className="bg-white text-black text-xs font-bold px-2 py-0.5 rounded-full">{selectedOrderIds.size}</span>
+                            <span className="text-sm font-medium">Elementos seleccionados</span>
                         </div>
-                        <div className="flex items-center gap-6 md:gap-12">
-                            <div className="flex flex-col items-end">
-                                <span className="text-xs font-semibold text-[#776685] dark:text-gray-400 uppercase tracking-wider">Total Paquetes</span>
-                                <span className="text-2xl md:text-3xl font-black text-accent-purple">{item.totalPackages}</span>
-                            </div>
-                            <div className="text-[#776685] dark:text-gray-400 transition-transform duration-300 group-open:rotate-180">
-                                <ChevronDown className="size-8" />
-                            </div>
-                        </div>
-                    </summary>
-                    <div className="border-t border-[#e1dce4] dark:border-white/10 bg-[#faf9fb] dark:bg-background-dark/50">
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse">
-                                <thead>
-                                    <tr className="border-b border-[#e1dce4] dark:border-white/10">
-                                        <th className="p-4 w-16 text-center">
-                                            <div className="size-5 border-2 border-[#776685] rounded mx-auto"></div>
-                                        </th>
-                                        <th className="p-4 text-xs font-semibold text-[#776685] dark:text-gray-400 uppercase tracking-wider">Pedido #</th>
-                                        <th className="p-4 text-xs font-semibold text-[#776685] dark:text-gray-400 uppercase tracking-wider">Cliente</th>
-                                        <th className="p-4 text-xs font-semibold text-[#776685] dark:text-gray-400 uppercase tracking-wider">Paquetes</th>
-                                        <th className="p-4 text-xs font-semibold text-[#776685] dark:text-gray-400 uppercase tracking-wider text-center">Total</th>
-                                        <th className="p-4 text-xs font-semibold text-[#776685] dark:text-gray-400 uppercase tracking-wider text-right">Acción</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-[#e1dce4] dark:divide-white/10 bg-white dark:bg-surface-dark">
-                                    {item.orders.map((order: any, oIdx: number) => (
-                                        <tr key={oIdx} className="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors group/row">
-                                            <td className="p-4 text-center">
-                                                <input className="h-6 w-6 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer transition-all" type="checkbox" />
-                                            </td>
-                                            <td className="p-4 font-medium text-[#151217] dark:text-white">{order.id}</td>
-                                            <td className="p-4 text-[#151217] dark:text-white">
-                                                <div className="flex flex-col">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="font-medium">{order.client}</span>
-                                                        {order.vip && (
-                                                            <span className="bg-accent-purple text-white text-[10px] font-black px-1.5 py-0.5 rounded leading-none uppercase">VIP</span>
-                                                        )}
-                                                    </div>
-                                                    <span className="text-xs text-[#776685] dark:text-gray-400">{order.location}</span>
-                                                </div>
-                                            </td>
-                                            <td className="p-4">
-                                                <div className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300 min-w-[80px]">
-                                                    {order.qty}
-                                                </div>
-                                            </td>
-                                            <td className="p-4 text-center">
-                                                <div className="inline-flex items-center gap-2">
-                                                    <span className={cn("font-bold", order.totalOrders > 50 ? "text-accent-purple" : "text-[#151217] dark:text-white")}>{order.totalOrders}</span>
-                                                    <span className="text-xs text-[#776685] dark:text-gray-400">pedidos</span>
-                                                </div>
-                                            </td>
-                                            <td className="p-4 text-right">
-                                                <button className="text-[#776685] dark:text-gray-400 hover:text-primary dark:hover:text-primary-300 font-medium text-sm cursor-pointer">Ver Detalles</button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                        <div className="h-4 w-px bg-white/20"></div>
+                        <button className="text-sm font-bold text-white hover:text-green-400 transition-colors">
+                            Marcar como Completados
+                        </button>
                     </div>
-                </details>
-            ))}
+                )}
+
+                <div className="flex justify-between items-center px-2">
+                    <div className="flex items-center gap-2">
+                         <input 
+                            type="checkbox" 
+                            checked={processedItems.length > 0 && selectedOrderIds.size === processedItems.length}
+                            onChange={toggleSelectAll}
+                            className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                        />
+                        <span className="text-sm font-medium text-slate-600">Seleccionar Todo</span>
+                    </div>
+                    <span className="text-sm text-slate-500">{processedItems.length} Variedades</span>
+                </div>
+
+                {processedItems.map((item) => (
+                    <details key={item.id} className="group bg-white dark:bg-surface-dark rounded-xl border border-[#e1dce4] dark:border-white/10 shadow-sm overflow-hidden" open={true}>
+                        <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition-colors select-none">
+                            <div className="flex items-center gap-4 md:gap-6">
+                                <div onClick={(e) => { e.preventDefault(); toggleSelectItem(item.id); }}>
+                                    <input 
+                                        type="checkbox" 
+                                        checked={selectedOrderIds.has(item.id)}
+                                        onChange={() => {}} // Handled by div click
+                                        className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                                    />
+                                </div>
+                                <div
+                                    className="h-16 w-16 rounded-lg bg-cover bg-center shrink-0 border border-gray-100 dark:border-white/10"
+                                    style={{ backgroundImage: `url('${item.image}')` }}
+                                >
+                                </div>
+                                <div className="flex flex-col text-left">
+                                    <h3 className="text-lg font-bold text-[#151217] dark:text-white">{item.name}</h3>
+                                    <p className="text-[#776685] dark:text-gray-400 text-sm">SKU: {item.sku}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-6 md:gap-12">
+                                <div className="flex flex-col items-end">
+                                    <span className="text-xs font-semibold text-[#776685] dark:text-gray-400 uppercase tracking-wider">Total Paquetes</span>
+                                    <span className="text-2xl md:text-3xl font-black text-accent-purple">{item.totalPackages}</span>
+                                </div>
+                                <div className="text-[#776685] dark:text-gray-400 transition-transform duration-300 group-open:rotate-180">
+                                    <ChevronDown className="size-8" />
+                                </div>
+                            </div>
+                        </summary>
+                        <div className="border-t border-[#e1dce4] dark:border-white/10 bg-[#faf9fb] dark:bg-background-dark/50">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="border-b border-[#e1dce4] dark:border-white/10">
+                                            <th className="p-4 w-16 text-center">
+                                                <div className="size-5 border-2 border-[#776685] rounded mx-auto"></div>
+                                            </th>
+                                            <th className="p-4 text-xs font-semibold text-[#776685] dark:text-gray-400 uppercase tracking-wider">Pedido #</th>
+                                            <th className="p-4 text-xs font-semibold text-[#776685] dark:text-gray-400 uppercase tracking-wider">Cliente</th>
+                                            <th className="p-4 text-xs font-semibold text-[#776685] dark:text-gray-400 uppercase tracking-wider">Paquetes</th>
+                                            <th className="p-4 text-xs font-semibold text-[#776685] dark:text-gray-400 uppercase tracking-wider text-center">Total</th>
+                                            <th className="p-4 text-xs font-semibold text-[#776685] dark:text-gray-400 uppercase tracking-wider text-right">Acción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-[#e1dce4] dark:divide-white/10 bg-white dark:bg-surface-dark">
+                                        {item.orders.map((order: any, oIdx: number) => (
+                                            <tr key={oIdx} className="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors group/row">
+                                                <td className="p-4 text-center">
+                                                    <input className="h-6 w-6 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer transition-all" type="checkbox" />
+                                                </td>
+                                                <td className="p-4 font-medium text-[#151217] dark:text-white">{order.id}</td>
+                                                <td className="p-4 text-[#151217] dark:text-white">
+                                                    <div className="flex flex-col">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="font-medium">{order.client}</span>
+                                                            {order.vip && (
+                                                                <span className="bg-accent-purple text-white text-[10px] font-black px-1.5 py-0.5 rounded leading-none uppercase">VIP</span>
+                                                            )}
+                                                        </div>
+                                                        <span className="text-xs text-[#776685] dark:text-gray-400">{order.location}</span>
+                                                    </div>
+                                                </td>
+                                                <td className="p-4">
+                                                    <div className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300 min-w-[80px]">
+                                                        {order.qty}
+                                                    </div>
+                                                </td>
+                                                <td className="p-4 text-center">
+                                                    <div className="inline-flex items-center gap-2">
+                                                        <span className={cn("font-bold", order.totalOrders > 50 ? "text-accent-purple" : "text-[#151217] dark:text-white")}>{order.totalOrders}</span>
+                                                        <span className="text-xs text-[#776685] dark:text-gray-400">pedidos</span>
+                                                    </div>
+                                                </td>
+                                                <td className="p-4 text-right">
+                                                    <button className="text-[#776685] dark:text-gray-400 hover:text-primary dark:hover:text-primary-300 font-medium text-sm cursor-pointer">Ver Detalles</button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </details>
+                ))}
+            </div>
+
             {/* Informative Footer */}
             <div className="mt-8 mb-20 p-6 rounded-xl border border-dashed border-slate-300 dark:border-white/20 bg-slate-50 dark:bg-white/5 text-center">
                 <p className="text-sm text-slate-500 dark:text-gray-400">
@@ -266,6 +354,6 @@ export default function SurtidoClient({
                 </p>
             </div>
         </div>
-    </div>
     );
 }
+

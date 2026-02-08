@@ -138,7 +138,8 @@ export default async function SurtidoPage(props: { searchParams: Promise<{ date?
         const primaryVariety = uniqueVarieties[0];
 
         return {
-            id: primaryVariety.varietyId,
+            id: `${orderData.id}-${primaryVariety.varietyId}`, // Composite key: orderId + varietyId
+            varietyId: primaryVariety.varietyId, // Keep original for selection logic
             name: primaryVariety.varietyName,
             sku: primaryVariety.varietySku,
             image: primaryVariety.varietyImage,
