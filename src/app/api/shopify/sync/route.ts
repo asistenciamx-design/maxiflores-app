@@ -255,11 +255,25 @@ export async function POST() {
 
             if (order.line_items?.length > 0) {
                 for (const item of order.line_items) {
+                    // CRITICAL FIX: Use variant_id to match the correct variant variety
+                    // Previously used product_id which matched parent product instead of specific variant
                     let targetSku = item.sku;
-                    if (!targetSku && item.product_id) targetSku = `SHOPIFY-${item.product_id}`;
+                    if (!targetSku && item.variant_id && item.product_id) {
+                        // Build SKU that matches how varieties are stored: SHOPIFY-{product_id}-{variant_id}
+                        targetSku = `SHOPIFY-${item.product_id}-${item.variant_id}`;
+                    } else if (!targetSku && item.product_id) {
+                        // Fallback to product-only SKU for products without variants
+                        targetSku = `SHOPIFY-${item.product_id}`;
+                    }
                     if (!targetSku) continue;
 
-                    const varietyId = varietyMap.get(targetSku);
+                    let varietyId = varietyMap.get(targetSku);
+                    
+                    // If not found with variant SKU, try product-only SKU as fallback
+                    if (!varietyId && item.product_id) {
+                        const fallbackSku = `SHOPIFY-${item.product_id}`;
+                        varietyId = varietyMap.get(fallbackSku);
+                    }
 
                     // Use current_quantity to account for refunds/edits
                     // If current_quantity is 0, it means the item was removed/refunded.

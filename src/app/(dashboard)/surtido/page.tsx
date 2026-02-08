@@ -68,7 +68,15 @@ export default async function SurtidoPage(props: { searchParams: Promise<{ date?
 
     function extractVariantName(fullName: string): string {
         const match = fullName.match(/ - (Estándar|Primera|Premium)$/i);
-        return match ? match[1] : 'Estándar';
+        if (!match) return 'Sin Variante';
+        
+        // Normalize to proper capitalization
+        const variant = match[1].toLowerCase();
+        if (variant === 'estándar') return 'Estándar';
+        if (variant === 'primera') return 'Primera';
+        if (variant === 'premium') return 'Premium';
+        
+        return match[1]; // Fallback to original capitalization
     }
     
     // In-Memory Time Filter & Transform
