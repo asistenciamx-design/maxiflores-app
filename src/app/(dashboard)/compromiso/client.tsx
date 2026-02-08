@@ -24,9 +24,10 @@ export default function CompromisoClient({ initialRows, initialDate }: { initial
         setRows(initialRows);
     }, [initialRows]);
 
-    const handleUpdateRowQty = (commitmentId: string, newQty: number) => {
+    const handleUpdateRowQty = (rowId: string, newQty: number) => {
         setRows(prev => prev.map(r => {
-            if (r.commitmentId === commitmentId) {
+            // Use strict ID comparison
+            if (r.id === rowId) {
                 return { ...r, qty: newQty };
             }
             return r;
@@ -396,13 +397,8 @@ function Row({ row, onUpdateQty }: { row: any, onUpdateQty: (id: string, qty: nu
         const num = val === '' ? 0 : parseInt(val);
         if (isNaN(num)) return;
         
-        // Immediate UI update via parent state
-        onUpdateQty(row.commitmentId, num);
-        
-        // Debounced or separate effect for server save could be better, 
-        // but for now we trust the user won't type 1000 characters per second.
-        // Actually, firing server action on every stroke is bad. 
-        // We should keep the server update on BLUR, but UI update immediate.
+        // Immediate UI update via parent state using unique ID
+        onUpdateQty(row.id, num);
     };
 
     const handleBlur = () => {
