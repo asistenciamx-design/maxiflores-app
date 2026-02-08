@@ -10,7 +10,7 @@ import { useState, useRef, useEffect } from 'react';
 const navItems = [
     { name: 'Pedidos', href: '/surtido' },
     { name: 'Inventario', href: '/compromiso' },
-    { name: 'Integraciones', href: '/configuracion/shopify' },
+    // { name: 'Integraciones', href: '/configuracion/shopify' }, // Hidden by request
 ];
 
 export function Header() {
