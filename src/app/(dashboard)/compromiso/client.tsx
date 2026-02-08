@@ -275,14 +275,7 @@ export default function CompromisoClient({ initialRows, initialDate }: { initial
                         <p className="text-slate-600 mt-1 max-w-2xl">Vista de flores a surtir por el invernadero.</p>
                     </div>
                     <div className="flex items-center gap-3">
-                        <button className="flex items-center justify-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-700 font-medium hover:bg-slate-50 transition-colors shadow-sm">
-                            <Download className="size-5" />
-                            Exportar
-                        </button>
-                        <button className="flex items-center justify-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg font-medium shadow-md transition-colors">
-                            <CheckCircle className="size-5" />
-                            Confirmar Todo
-                        </button>
+                        {/* Buttons removed by request */}
                     </div>
                 </div>
 
