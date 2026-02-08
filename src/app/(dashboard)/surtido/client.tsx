@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition, useEffect } from 'react';
-import { Package, ShoppingCart, BarChart3, CheckSquare, ChevronDown, Check, ChevronUp, Calendar, Filter, RefreshCw } from 'lucide-react';
+import { Package, ShoppingCart, BarChart3, CheckSquare, ChevronDown, Check, ChevronUp, Calendar, Filter, RefreshCw, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 
@@ -299,12 +299,13 @@ export default function SurtidoClient({
                                                 <td className="p-4 text-[#151217] dark:text-white">
                                                     <div className="flex flex-col">
                                                         <div className="flex items-center gap-2">
+                                                            <User className="size-4 text-[#776685] dark:text-gray-400 shrink-0" />
                                                             <span className="font-medium">{order.client}</span>
                                                             {order.vip && (
                                                                 <span className="bg-accent-purple text-white text-[10px] font-black px-1.5 py-0.5 rounded leading-none uppercase">VIP</span>
                                                             )}
                                                         </div>
-                                                        <span className="text-xs text-[#776685] dark:text-gray-400">{order.location}</span>
+                                                        <span className="text-xs text-[#776685] dark:text-gray-400 ml-6">{order.location}</span>
                                                     </div>
                                                 </td>
                                                 <td className="p-4">
