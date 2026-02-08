@@ -22,13 +22,11 @@ export function Header() {
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-                console.log('Closing dropdown - clicked outside');
                 setIsDropdownOpen(false);
             }
         }
 
         if (isDropdownOpen) {
-            console.log('Dropdown is open, adding event listener');
             document.addEventListener('mousedown', handleClickOutside);
         }
 
@@ -38,14 +36,11 @@ export function Header() {
     }, [isDropdownOpen]);
 
     const handleLogout = async () => {
-        console.log('Logout clicked');
         await logout();
     };
 
     const handleAvatarClick = () => {
-        console.log('Avatar clicked, current state:', isDropdownOpen);
         setIsDropdownOpen(!isDropdownOpen);
-        console.log('New state will be:', !isDropdownOpen);
     };
 
     return (
@@ -58,9 +53,6 @@ export function Header() {
                                 <Flower className="size-6" />
                             </div>
                             <h2 className="text-[#151217] dark:text-white text-lg font-bold tracking-tight">Maxiflores OMS</h2>
-                            <span className="ml-2 px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800 text-xs font-bold border border-yellow-200">
-                                v2.1
-                            </span>
                         </Link>
                         <nav className="hidden md:flex items-center gap-6">
                             {navItems.map((item) => (
