@@ -364,8 +364,14 @@ function Row({ row }: { row: any }) {
                 </td>
                 <td className="py-4 px-2" onClick={() => setExpanded(!expanded)}>
                     <div className="flex items-center gap-4">
-                        <div className="size-10 rounded-lg bg-cover bg-center shadow-sm relative overflow-hidden border border-slate-200">
-                             {row.image && <Image src={row.image} alt={row.product} fill className="object-cover" />}
+                        <div className="size-10 rounded-lg bg-gray-100 relative overflow-hidden shrink-0 border border-slate-100">
+                             {row.image ? (
+                                <Image src={row.image} alt={row.product} fill className="object-cover" />
+                             ) : (
+                                <div className="w-full h-full flex items-center justify-center text-slate-300">
+                                    <ShoppingCart className="size-5" />
+                                </div>
+                             )}
                         </div>
                         <div>
                             <p className="font-bold text-slate-900">{row.product}</p>
@@ -380,12 +386,13 @@ function Row({ row }: { row: any }) {
                     <div className="relative flex items-center justify-center">
                         <input 
                             type="number"
-                            value={qty}
+                            value={qty || ''} 
+                            placeholder=""
                             onChange={(e) => handleQtyChange(e.target.value)}
                             onBlur={handleBlur}
                             disabled={isPending}
                             className={cn(
-                                "w-20 text-center font-mono font-bold text-slate-900 bg-transparent border border-transparent hover:border-slate-300 focus:border-primary rounded px-2 py-1 outline-none transition-all",
+                                "w-20 text-center font-mono font-bold text-slate-900 bg-purple-50 hover:bg-purple-100 focus:bg-white border border-transparent hover:border-purple-200 focus:border-primary rounded px-2 py-1 outline-none transition-all placeholder:text-transparent",
                                 isPending && "opacity-50"
                             )}
                         />
