@@ -362,10 +362,11 @@ export default function CompromisoClient({ initialRows, initialDate }: { initial
                                 ) : (
                                     visibleRows.map((row, idx) => (
                                         <Row 
-                                            key={row.id || idx} 
-                                            row={row} 
-                                            onUpdateQty={handleUpdateRowQty}
-                                        />
+                                        key={row.id} 
+                                        row={row} 
+                                        date={date}
+                                        onUpdateQty={handleUpdateRowQty} 
+                                    />
                                     ))
                                 )}
                             </tbody>
@@ -380,7 +381,7 @@ export default function CompromisoClient({ initialRows, initialDate }: { initial
     );
 }
 
-function Row({ row, onUpdateQty }: { row: any, onUpdateQty: (id: string, qty: number) => void }) {
+function Row({ row, date, onUpdateQty }: { row: any, date: string, onUpdateQty: (id: string, qty: number) => void }) {
     const [expanded, setExpanded] = useState(false);
     // Remove local state in favor of prop-driven state for immediate UI updates
     // const [qty, setQty] = useState(row.qty); 
@@ -398,7 +399,13 @@ function Row({ row, onUpdateQty }: { row: any, onUpdateQty: (id: string, qty: nu
         startTransition(async () => {
             try {
                 // Save to server
-                await updateCommitment(row.commitmentId, row.qty);
+                // Save to server (Upsert logic)
+                // We need date from parent context? Not passed to Row directly.
+                // Assuming `row` contains date or we pass it. 
+                // Ah, date is state in parent. We need to pass it to Row.
+                // Wait, client.tsx doesn't pass 'date' to Row. 
+                // Let's pass it from parent.
+                await updateCommitment(row.commitmentId, row.id, date, row.qty);
             } catch (e) {
                 console.error("Update failed", e);
             }
