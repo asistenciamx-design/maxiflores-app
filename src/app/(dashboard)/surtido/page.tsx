@@ -63,6 +63,7 @@ export default async function SurtidoPage(props: { searchParams: Promise<{ date?
     let totalPackages = 0;
     let activeOrdersCount = 0;
     const activeOrderIds = new Set();
+    const uniqueClients = new Set(); // Track unique client names
 
     // NEW APPROACH: Group by Order First, then collect varieties
     // This prevents the same order from appearing multiple times across different varieties
@@ -133,6 +134,7 @@ export default async function SurtidoPage(props: { searchParams: Promise<{ date?
         
         totalPackages += orderTotalPackages;
         activeOrderIds.add(orderData.id);
+        uniqueClients.add(orderData.client_name); // Track unique client
 
         // For display, we'll show the primary variety (first one or most common)
         const primaryVariety = uniqueVarieties[0];
@@ -156,6 +158,7 @@ export default async function SurtidoPage(props: { searchParams: Promise<{ date?
     });
     
     activeOrdersCount = activeOrderIds.size;
+    const uniqueClientsCount = uniqueClients.size;
 
 
     return (
@@ -190,27 +193,14 @@ export default async function SurtidoPage(props: { searchParams: Promise<{ date?
                     <p className="text-xs text-[#776685] dark:text-gray-500">Órdenes activas</p>
                 </div>
 
-                {/* Custom Donut Chart Card */}
+                {/* Total Clientes Card */}
                 <div className="bg-white dark:bg-surface-dark p-6 rounded-xl border border-[#e1dce4] dark:border-white/10 shadow-sm flex flex-col gap-2">
-                    <div className="flex items-center justify-between">
-                        <div className="flex flex-col gap-2">
-                            <div className="flex items-center gap-2 text-[#776685] dark:text-gray-400">
-                                <BarChart3 className="size-5" />
-                                <span className="text-sm font-semibold uppercase tracking-wider">Progreso</span>
-                            </div>
-                            <span className="text-5xl font-black text-[#151217] dark:text-white">35%</span>
-                        </div>
-                        <div className="relative w-20 h-20">
-                            <svg className="w-full h-full" viewBox="0 0 36 36">
-                                <path className="text-[#f2f1f4] dark:text-white/10 stroke-current" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" strokeWidth="3"></path>
-                                <path className="text-accent-purple stroke-current" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" strokeDasharray="35, 100" strokeLinecap="round" strokeWidth="3"></path>
-                            </svg>
-                            <div className="absolute inset-0 flex items-center justify-center">
-                                <CheckSquare className="text-accent-purple size-6" />
-                            </div>
-                        </div>
+                    <div className="flex items-center gap-2 text-[#776685] dark:text-gray-400">
+                        <BarChart3 className="size-5" />
+                        <span className="text-sm font-semibold uppercase tracking-wider">Total de Clientes</span>
                     </div>
-                    <p className="text-xs text-[#776685] dark:text-gray-500">Simulación en tiempo real</p>
+                    <span className="text-5xl font-black text-[#151217] dark:text-white">{uniqueClientsCount}</span>
+                    <p className="text-xs text-[#776685] dark:text-gray-500">Clientes únicos</p>
                 </div>
             </div>
 
