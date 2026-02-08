@@ -64,9 +64,9 @@ export default async function SurtidoPage(props: { searchParams: Promise<{ date?
     let activeOrdersCount = 0;
     const activeOrderIds = new Set();
 
-    // NEW APPROACH: Group by Order First, then collect varieties
-    // This prevents the same order from appearing multiple times across different varieties
-    const ordersMap = new Map();
+    // NEW APPROACH: Group by VARIETY first, then collect orders for each variety
+    // This shows each flower/product with its total packages and all orders that requested it
+    const varietiesMap = new Map();
     
     varieties?.forEach(v => {
         // Filter order_items by delivery_date AND creation time
@@ -90,70 +90,43 @@ export default async function SurtidoPage(props: { searchParams: Promise<{ date?
             return true;
         });
 
-        // Add each valid order item to the global orders map
-        validOrderItems.forEach((oi: any) => {
-            const orderId = oi.orders.id;
-            
-            if (!ordersMap.has(orderId)) {
-                ordersMap.set(orderId, {
-                    orderData: oi.orders,
-                    varieties: []
-                });
-            }
-            
-            // Add this variety to the order's variety list
-            ordersMap.get(orderId).varieties.push({
-                varietyId: v.id,
-                varietyName: v.name,
-                varietySku: v.sku,
-                varietyImage: v.image_url,
-                quantity: oi.quantity,
-                itemId: oi.id
-            });
-        });
-    });
+        // Skip varieties with no valid orders for this date/time
+        if (validOrderItems.length === 0) return;
 
-    // Convert orders map to items array for display
-    const items = Array.from(ordersMap.values()).map(({ orderData, varieties: orderVarieties }) => {
-        // Group varieties by variety ID to handle duplicates within the same order
-        const varietiesMap = new Map();
-        orderVarieties.forEach((v: any) => {
-            if (!varietiesMap.has(v.varietyId)) {
-                varietiesMap.set(v.varietyId, {
-                    ...v,
-                    totalQuantity: 0
-                });
-            }
-            // Sum quantities for the same variety (in case of duplicates)
-            varietiesMap.get(v.varietyId).totalQuantity += v.quantity;
-        });
-
-        const uniqueVarieties = Array.from(varietiesMap.values());
-        const orderTotalPackages = uniqueVarieties.reduce((sum, v) => sum + v.totalQuantity, 0);
+        // Calculate total packages for this variety across all valid orders
+        const totalPackagesForVariety = validOrderItems.reduce((sum, oi) => sum + oi.quantity, 0);
         
-        totalPackages += orderTotalPackages;
-        activeOrderIds.add(orderData.id);
+        // Collect order details for this variety
+        const ordersForVariety = validOrderItems.map((oi: any) => {
+            // Track unique orders for total count
+            activeOrderIds.add(oi.orders.id);
+            
+            return {
+                id: oi.orders.order_number || `#${oi.orders.id.split('-')[0].toUpperCase()}`,
+                client: oi.orders.client_name,
+                location: oi.orders.location,
+                qty: `${oi.quantity} Paqs`,
+                totalOrders: 1, // Each row represents 1 order
+                vip: oi.orders.is_vip
+            };
+        });
 
-        // For display, we'll show the primary variety (first one or most common)
-        const primaryVariety = uniqueVarieties[0];
+        // Store variety with all its orders
+        varietiesMap.set(v.id, {
+            id: v.id,
+            name: v.name,
+            sku: v.sku,
+            image: v.image_url,
+            totalPackages: totalPackagesForVariety,
+            orders: ordersForVariety
+        });
 
-        return {
-            id: `${orderData.id}-${primaryVariety.varietyId}`, // Composite key: orderId + varietyId
-            varietyId: primaryVariety.varietyId, // Keep original for selection logic
-            name: primaryVariety.varietyName,
-            sku: primaryVariety.varietySku,
-            image: primaryVariety.varietyImage,
-            totalPackages: orderTotalPackages,
-            orders: [{
-                id: orderData.order_number || `#${orderData.id.split('-')[0].toUpperCase()}`,
-                client: orderData.client_name,
-                location: orderData.location,
-                qty: `${orderTotalPackages} Paqs`,
-                totalOrders: 1,
-                vip: orderData.is_vip
-            }]
-        };
+        // Add to global total
+        totalPackages += totalPackagesForVariety;
     });
+
+    // Convert varieties map to array for display
+    const items = Array.from(varietiesMap.values());
     
     activeOrdersCount = activeOrderIds.size;
 
