@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Flower, Search, Plus, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { logout } from '@/app/auth/actions';
@@ -10,6 +10,7 @@ import { useState, useRef, useEffect } from 'react';
 const navItems = [
     { name: 'Pedidos', href: '/surtido' },
     { name: 'Inventario', href: '/compromiso' },
+    { name: 'Desglose', href: '/desglose' },
     // { name: 'Integraciones', href: '/configuracion/shopify' }, // Hidden by request
 ];
 
@@ -43,7 +44,15 @@ export function Header() {
         setIsDropdownOpen(!isDropdownOpen);
     };
 
+    const [searchQuery, setSearchQuery] = useState('');
+    const router = useRouter();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+    const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter' && searchQuery.trim()) {
+            router.push(`/desglose?q=${encodeURIComponent(searchQuery.trim())}`);
+        }
+    };
 
     return (
         <header className="bg-white border-b border-[#f2f1f4] sticky top-0 z-50 dark:bg-background-dark dark:border-white/10">
@@ -92,6 +101,9 @@ export function Header() {
                             <input
                                 className="bg-[#f2f1f4] dark:bg-white/5 border-none text-sm rounded-lg block w-64 pl-10 p-2.5 focus:ring-1 focus:ring-primary placeholder-[#776685] outline-none dark:text-white"
                                 placeholder="Buscar pedido o variedad..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onKeyDown={handleSearch}
                             />
                         </div>
                         <button className="bg-primary hover:bg-primary-dark text-white rounded-lg px-3 py-2 sm:px-4 text-sm font-bold flex items-center gap-2 transition-colors shadow-sm cursor-pointer">
