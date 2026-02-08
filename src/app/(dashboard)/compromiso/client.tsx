@@ -414,26 +414,22 @@ function Row({ row, onUpdateQty }: { row: any, onUpdateQty: (id: string, qty: nu
                 )}
             >
                 <td className="pl-6 py-4">
-                    <button 
-                        onClick={() => setExpanded(!expanded)} 
-                        className="text-slate-400 hover:text-primary transition-colors">
-                        <ChevronRight className={cn("size-5 transition-transform", expanded && "-rotate-90")} />
-                    </button>
+                     {/* Expand button removed by request */}
                 </td>
-                <td className="py-4 px-2" onClick={() => setExpanded(!expanded)}>
+                <td className="py-4 px-2">
                     <div className="flex items-center gap-4">
-                        <div className="size-10 rounded-lg bg-gray-100 relative overflow-hidden shrink-0 border border-slate-100">
+                        <div className="size-16 rounded-lg bg-gray-100 relative overflow-hidden shrink-0 border border-slate-100 shadow-sm">
                              {row.image ? (
                                 <Image src={row.image} alt={row.product} fill className="object-cover" />
                              ) : (
                                 <div className="w-full h-full flex items-center justify-center text-slate-300">
-                                    <ShoppingCart className="size-5" />
+                                    <ShoppingCart className="size-8" />
                                 </div>
                              )}
                         </div>
                         <div>
-                            <p className="font-bold text-slate-900">{row.product}</p>
-                            <p className="text-xs text-slate-500 font-mono">ID: #{row.id?.substring(0,6)}</p>
+                            <p className="font-bold text-slate-900 text-sm">{row.product}</p>
+                            <p className="text-[10px] text-slate-500 font-mono">ID: #{row.id?.substring(0,6)}</p>
                         </div>
                     </div>
                 </td>
