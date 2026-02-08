@@ -162,8 +162,8 @@ export default async function SurtidoPage(props: { searchParams: Promise<{ date?
         <div className="max-w-[1200px] mx-auto">
             <div className="mb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl md:text-4xl font-black text-[#151217] dark:text-white tracking-tight mb-2">Lista de Surtido</h1>
-                    <p className="text-[#776685] dark:text-gray-400 text-base">Gestión de picking en tiempo real.</p>
+                    <h1 className="text-3xl md:text-4xl font-black text-[#151217] dark:text-white tracking-tight mb-2">Lista de Pedidos</h1>
+                    <p className="text-[#776685] dark:text-gray-400 text-base">Vista de productos solicitados por pedido y cliente en tiempo real.</p>
                 </div>
                 <div className="flex items-center gap-2 text-sm font-medium text-[#776685] dark:text-gray-300 bg-white dark:bg-white/5 px-3 py-1.5 rounded-lg border border-[#e1dce4] dark:border-white/10">
                     <span className="w-2 h-2 rounded-full bg-green-500"></span>
