@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { shopifyFetch } from '@/lib/shopify';
 
 export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
@@ -8,38 +9,24 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: 'Order number required' }, { status: 400 });
     }
 
-    const shopifyDomain = process.env.SHOPIFY_STORE_DOMAIN;
-    const accessToken = process.env.SHOPIFY_ACCESS_TOKEN;
-
-    if (!shopifyDomain || !accessToken) {
-        return NextResponse.json({ error: 'Missing Shopify credentials' }, { status: 500 });
-    }
-
     try {
         // Search by order number using the name parameter
-        const url = `https://${shopifyDomain}/admin/api/2024-01/orders.json?name=${orderNumber}&status=any&limit=10`;
+        const endpoint = `orders.json?name=${orderNumber}&status=any&limit=10`;
         
         console.log(`[SearchOrder] Searching for order: ${orderNumber}`);
-        console.log(`[SearchOrder] URL: ${url}`);
 
-        const response = await fetch(url, {
-            headers: {
-                'X-Shopify-Access-Token': accessToken,
-                'Content-Type': 'application/json',
-            },
-        });
+        const response = await shopifyFetch<any>(endpoint);
 
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error(`[SearchOrder] Shopify API error: ${response.status} - ${errorText}`);
+            console.error(`[SearchOrder] Shopify API error: ${response.status} - ${response.details}`);
             return NextResponse.json({ 
                 error: 'Shopify API error', 
                 status: response.status,
-                details: errorText 
+                details: response.details 
             }, { status: response.status });
         }
 
-        const data = await response.json();
+        const data = response.data;
         
         return NextResponse.json({
             query: orderNumber,

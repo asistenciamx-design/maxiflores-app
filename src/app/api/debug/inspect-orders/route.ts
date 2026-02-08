@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { shopifyFetch } from '@/lib/shopify';
 
 export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
@@ -8,39 +9,24 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: 'Provide order numbers as ?numbers=5608,5618' }, { status: 400 });
     }
 
-    // Use environment variables for credentials
-    const shopifyDomain = process.env.SHOPIFY_SHOP_URL || '1dmass-ij.myshopify.com';
-    const accessToken = process.env.SHOPIFY_ACCESS_TOKEN;
-
-    if (!accessToken) {
-        return NextResponse.json({ error: 'Missing SHOPIFY_ACCESS_TOKEN' }, { status: 500 });
-    }
-
     try {
         const results: any[] = [];
 
         for (const orderNum of orderNumbers) {
-            const url = `https://${shopifyDomain}/admin/api/2024-01/orders.json?name=${orderNum.trim()}&status=any&limit=5`;
-            
             console.log(`[InspectOrders] Fetching order: ${orderNum}`);
 
-            const response = await fetch(url, {
-                headers: {
-                    'X-Shopify-Access-Token': accessToken,
-                    'Content-Type': 'application/json',
-                },
-            });
+            const response = await shopifyFetch<any>(`orders.json?name=${orderNum.trim()}&status=any&limit=5`);
 
             if (!response.ok) {
                 results.push({
                     order_number: orderNum,
-                    error: `Shopify API error: ${response.status}`,
+                    error: response.error,
                     found: false
                 });
                 continue;
             }
 
-            const data = await response.json();
+            const data = response.data;
             
             if (!data.orders || data.orders.length === 0) {
                 results.push({

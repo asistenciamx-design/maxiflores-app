@@ -1,13 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { shopifyFetch } from '@/lib/shopify';
 
 export async function GET(req: NextRequest) {
     // Use environment variables for credentials
     const SHOP_URL = process.env.SHOPIFY_SHOP_URL || '1dmass-ij.myshopify.com';
-    const ACCESS_TOKEN = process.env.SHOPIFY_ACCESS_TOKEN;
-
-    if (!ACCESS_TOKEN) {
-        return NextResponse.json({ error: 'Missing SHOPIFY_ACCESS_TOKEN' }, { status: 500 });
-    }
 
     try {
         // Calculate 60 days ago (same as sync)
@@ -19,29 +15,24 @@ export async function GET(req: NextRequest) {
         console.log(`[SyncTest] Today: ${today}`);
 
         // Test the exact query used in sync
-        const url = `https://${SHOP_URL}/admin/api/2024-01/orders.json?status=any&created_at_min=${sixtyDaysAgo}&limit=250`;
+        const endpoint = `orders.json?status=any&created_at_min=${sixtyDaysAgo}&limit=250`;
+        const url = `https://${SHOP_URL}/admin/api/2024-01/${endpoint}`;
         
         console.log(`[SyncTest] Query URL: ${url}`);
 
-        const response = await fetch(url, {
-            headers: {
-                'X-Shopify-Access-Token': ACCESS_TOKEN,
-                'Content-Type': 'application/json',
-            },
-        });
+        const response = await shopifyFetch<any>(endpoint);
 
         if (!response.ok) {
-            const errorText = await response.text();
             console.error(`[SyncTest] Shopify API error: ${response.status}`);
             return NextResponse.json({ 
                 error: `Shopify API returned ${response.status}`,
-                details: errorText,
+                details: response.details,
                 query_used: url,
                 sixty_days_ago: sixtyDaysAgo
             }, { status: response.status });
         }
 
-        const data = await response.json();
+        const data = response.data;
         const orders = data.orders || [];
         
         console.log(`[SyncTest] Retrieved ${orders.length} orders`);
