@@ -12,6 +12,10 @@ export async function GET(req: NextRequest) {
     const shopifyDomain = process.env.SHOPIFY_SHOP_URL || '1dmass-ij.myshopify.com';
     const accessToken = process.env.SHOPIFY_ACCESS_TOKEN;
 
+    if (!accessToken) {
+        return NextResponse.json({ error: 'Missing SHOPIFY_ACCESS_TOKEN' }, { status: 500 });
+    }
+
     try {
         const results: any[] = [];
 

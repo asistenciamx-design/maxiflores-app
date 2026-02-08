@@ -5,6 +5,10 @@ export async function GET(req: NextRequest) {
     const SHOP_URL = process.env.SHOPIFY_SHOP_URL || '1dmass-ij.myshopify.com';
     const ACCESS_TOKEN = process.env.SHOPIFY_ACCESS_TOKEN;
 
+    if (!ACCESS_TOKEN) {
+        return NextResponse.json({ error: 'Missing SHOPIFY_ACCESS_TOKEN' }, { status: 500 });
+    }
+
     try {
         // Calculate 60 days ago (same as sync)
         const sixtyDaysAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString();

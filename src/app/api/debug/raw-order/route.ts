@@ -8,6 +8,10 @@ export async function GET(req: NextRequest) {
     const SHOP_URL = process.env.SHOPIFY_SHOP_URL || '1dmass-ij.myshopify.com';
     const ACCESS_TOKEN = process.env.SHOPIFY_ACCESS_TOKEN;
 
+    if (!ACCESS_TOKEN) {
+        return NextResponse.json({ error: 'Missing SHOPIFY_ACCESS_TOKEN' }, { status: 500 });
+    }
+
     try {
         // Search for order by name with # prefix
         const url = `https://${SHOP_URL}/admin/api/2024-01/orders.json?name=%23${orderNumber}&status=any&limit=1`;
