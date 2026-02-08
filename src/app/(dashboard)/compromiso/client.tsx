@@ -11,9 +11,10 @@ export default function CompromisoClient({ initialRows, initialDate }: { initial
     const router = useRouter();
     const searchParams = useSearchParams();
     const [date, setDate] = useState(initialDate);
-    const [startTime, setStartTime] = useState('12:00'); // Default Start
-    const [endTime, setEndTime] = useState('23:59');     // Default End
+    const [startTime, setStartTime] = useState('00:00'); // Default Start: 12:00 AM
+    const [endTime, setEndTime] = useState('23:59');     // Default End: 11:59 PM
     const [searchTerm, setSearchTerm] = useState('');
+    const [isPending, startTransition] = useTransition();
 
     // Extract categories dynamically from the actual data (Faceted Search)
     const categories = useMemo(() => {
@@ -54,6 +55,22 @@ export default function CompromisoClient({ initialRows, initialDate }: { initial
         router.push(`/compromiso?${params.toString()}`);
     };
 
+    const setQuickDate = (offsetDays: number) => {
+        const d = new Date();
+        d.setDate(d.getDate() + offsetDays);
+        const newDate = d.toISOString().split('T')[0];
+        setDate(newDate);
+        
+        // Auto-apply filters when using date buttons
+        startTransition(() => {
+            const params = new URLSearchParams(searchParams);
+            params.set('date', newDate);
+            if (startTime) params.set('startTime', startTime);
+            if (endTime) params.set('endTime', endTime);
+            router.push(`/compromiso?${params.toString()}`);
+        });
+    };
+
     // Calculate Stats based on initialRows
     // We filter by client-side Category selection
     const visibleRows = useMemo(() => {
@@ -89,7 +106,7 @@ export default function CompromisoClient({ initialRows, initialDate }: { initial
                             Filtros
                         </h3>
                         <button 
-                            onClick={() => { setDate(''); setStartTime('01:00'); setEndTime('23:59'); setSearchTerm(''); setSelectedCategories(categories); }}
+                            onClick={() => { setDate(''); setStartTime('00:00'); setEndTime('23:59'); setSearchTerm(''); setSelectedCategories(categories); }}
                             className="text-xs font-medium text-slate-500 hover:text-primary transition-colors">
                             Limpiar
                         </button>
@@ -100,6 +117,31 @@ export default function CompromisoClient({ initialRows, initialDate }: { initial
                                 <Calendar className="size-4" />
                                 Dia de Entrega
                             </label>
+                            <div className="flex gap-2 mb-2">
+                                <button
+                                    onClick={() => setQuickDate(0)}
+                                    className={cn(
+                                        "flex-1 px-3 py-1.5 rounded-md text-xs font-bold transition-all border",
+                                        date === new Date().toISOString().split('T')[0] 
+                                            ? "bg-white text-accent border-orange-200 shadow-sm" 
+                                            : "bg-orange-100/50 text-slate-500 border-transparent hover:bg-orange-100"
+                                    )}
+                                >
+                                    Hoy
+                                </button>
+                                <button
+                                    onClick={() => setQuickDate(1)}
+                                    className={cn(
+                                        "flex-1 px-3 py-1.5 rounded-md text-xs font-bold transition-all border",
+                                        date === new Date(Date.now() + 86400000).toISOString().split('T')[0]
+                                            ? "bg-white text-accent border-orange-200 shadow-sm" 
+                                            : "bg-orange-100/50 text-slate-500 border-transparent hover:bg-orange-100"
+                                    )}
+                                >
+                                    Mañana
+                                </button>
+                            </div>
+
                             <div className="relative mb-3">
                                 <input 
                                     className="block w-full px-3 py-2 bg-white border border-orange-200 rounded-lg text-sm font-medium focus:ring-accent focus:border-accent text-slate-900 shadow-sm outline-none" 
@@ -170,8 +212,8 @@ export default function CompromisoClient({ initialRows, initialDate }: { initial
                                 {new Date(date).toLocaleDateString()}
                             </span>
                         </div>
-                        <h1 className="text-3xl font-black tracking-tight text-slate-900">Compromiso de Surtido</h1>
-                        <p className="text-slate-600 mt-1 max-w-2xl">Planificación detallada con auditoría de captura por registro.</p>
+                        <h1 className="text-3xl font-black tracking-tight text-slate-900">Flores del Invernadero</h1>
+                        <p className="text-slate-600 mt-1 max-w-2xl">Vista de flores a surtir por el invernadero.</p>
                     </div>
                     <div className="flex items-center gap-3">
                         <button className="flex items-center justify-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-700 font-medium hover:bg-slate-50 transition-colors shadow-sm">
@@ -199,22 +241,22 @@ export default function CompromisoClient({ initialRows, initialDate }: { initial
                     </div>
                     <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                         <div className="flex items-center justify-between mb-3">
-                            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Demanda Total</span>
+                            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Requerido</span>
                             <BarChart2 className="text-accent size-5" />
                         </div>
                         <div className="flex items-baseline gap-2">
                             <span className="text-2xl font-black text-slate-900 font-mono">{stats.totalDemand.toLocaleString()}</span>
-                            <span className="text-xs text-slate-400 font-medium">Tallos</span>
+                            <span className="text-xs text-slate-400 font-medium">Paquetes</span>
                         </div>
                     </div>
                     <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                         <div className="flex items-center justify-between mb-3">
-                            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Comprometido</span>
+                            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">A Surtir</span>
                             <ClipboardCheck className="text-secondary size-5" />
                         </div>
                         <div className="flex items-baseline gap-2">
                             <span className="text-2xl font-black text-slate-900 font-mono">{stats.totalCaptured.toLocaleString()}</span>
-                            <span className="text-xs text-slate-400 font-medium">Tallos</span>
+                            <span className="text-xs text-slate-400 font-medium">Paquetes</span>
                         </div>
                     </div>
                     <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-success">
@@ -254,7 +296,7 @@ export default function CompromisoClient({ initialRows, initialDate }: { initial
                                     <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider text-slate-500 text-right">Demanda</th>
                                     <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider text-slate-500 text-center">Cantidad</th>
                                     <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider text-slate-500 text-right">Variación</th>
-                                    <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider text-slate-500">Capturado por</th>
+                                    <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider text-slate-500">Registro</th>
                                     <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider text-slate-500">Cumplimiento</th>
                                 </tr>
                             </thead>
