@@ -43,16 +43,29 @@ export function Header() {
         setIsDropdownOpen(!isDropdownOpen);
     };
 
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
     return (
         <header className="bg-white border-b border-[#f2f1f4] sticky top-0 z-50 dark:bg-background-dark dark:border-white/10">
             <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
-                    <div className="flex items-center gap-8">
+                    <div className="flex items-center gap-4 md:gap-8">
+                        {/* Mobile Menu Button */}
+                        <button 
+                            className="md:hidden p-2 -ml-2 text-slate-500 hover:text-primary transition-colors"
+                            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                            </svg>
+                        </button>
+
                         <Link href="/surtido" className="flex items-center gap-3">
                             <div className="bg-primary/10 p-1.5 rounded-lg text-primary">
                                 <Flower className="size-6" />
                             </div>
-                            <h2 className="text-[#151217] dark:text-white text-lg font-bold tracking-tight">Maxiflores OMS</h2>
+                            <h2 className="text-[#151217] dark:text-white text-lg font-bold tracking-tight hidden sm:block">Maxiflores OMS</h2>
+                            <h2 className="text-[#151217] dark:text-white text-lg font-bold tracking-tight sm:hidden">OMS</h2>
                         </Link>
                         <nav className="hidden md:flex items-center gap-6">
                             {navItems.map((item) => (
@@ -71,7 +84,7 @@ export function Header() {
                             ))}
                         </nav>
                     </div>
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 sm:gap-4">
                         <div className="relative hidden sm:block">
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#776685]">
                                 <Search className="size-5" />
@@ -81,7 +94,7 @@ export function Header() {
                                 placeholder="Buscar pedido o variedad..."
                             />
                         </div>
-                        <button className="bg-primary hover:bg-primary-dark text-white rounded-lg px-4 py-2 text-sm font-bold flex items-center gap-2 transition-colors shadow-sm cursor-pointer">
+                        <button className="bg-primary hover:bg-primary-dark text-white rounded-lg px-3 py-2 sm:px-4 text-sm font-bold flex items-center gap-2 transition-colors shadow-sm cursor-pointer">
                             <Plus className="size-5" />
                             <span className="hidden sm:inline">Nuevo Pedido</span>
                         </button>
@@ -115,6 +128,29 @@ export function Header() {
                     </div>
                 </div>
             </div>
+
+            {/* Mobile Menu */}
+            {isMobileMenuOpen && (
+                <div className="md:hidden border-t border-slate-100 bg-white dark:bg-background-dark dark:border-white/10 absolute w-full left-0 shadow-lg">
+                    <nav className="flex flex-col p-4 space-y-2">
+                        {navItems.map((item) => (
+                            <Link
+                                key={item.href}
+                                href={item.href}
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className={cn(
+                                    "text-sm font-medium px-4 py-3 rounded-lg transition-colors flex items-center gap-3",
+                                    pathname.startsWith(item.href)
+                                        ? "bg-primary/10 text-primary font-bold"
+                                        : "text-slate-600 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-white/5"
+                                )}
+                            >
+                                {item.name}
+                            </Link>
+                        ))}
+                    </nav>
+                </div>
+            )}
         </header>
     );
 }
