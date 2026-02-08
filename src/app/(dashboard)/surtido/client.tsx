@@ -294,7 +294,6 @@ export default function SurtidoClient({
                                             <th className="p-4 text-xs font-semibold text-[#776685] dark:text-gray-400 uppercase tracking-wider">Variante</th>
                                             <th className="p-4 text-xs font-semibold text-[#776685] dark:text-gray-400 uppercase tracking-wider">Paquetes</th>
                                             <th className="p-4 text-xs font-semibold text-[#776685] dark:text-gray-400 uppercase tracking-wider text-center">Total</th>
-                                            <th className="p-4 text-xs font-semibold text-[#776685] dark:text-gray-400 uppercase tracking-wider text-right">Acción</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-[#e1dce4] dark:divide-white/10 bg-white dark:bg-surface-dark">
@@ -344,9 +343,6 @@ export default function SurtidoClient({
                                                         <span className={cn("font-bold", order.totalOrders > 50 ? "text-accent-purple" : "text-[#151217] dark:text-white")}>{order.totalOrders}</span>
                                                         <span className="text-xs text-[#776685] dark:text-gray-400">pedidos</span>
                                                     </div>
-                                                </td>
-                                                <td className="p-4 text-right">
-                                                    <button className="text-[#776685] dark:text-gray-400 hover:text-primary dark:hover:text-primary-300 font-medium text-sm cursor-pointer">Ver Detalles</button>
                                                 </td>
                                             </tr>
                                         ))}
