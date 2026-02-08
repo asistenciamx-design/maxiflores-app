@@ -96,18 +96,43 @@ export async function POST() {
         });
 
         // 4. Transform and Save Products (Varieties)
-        const varietiesToInsert = products.map((p: any) => {
+        // IMPORTANT: Each Shopify product can have multiple variants (Estándar, Primera, Premium)
+        // We need to save EACH variant as a separate variety
+        const varietiesToInsert: any[] = [];
+        
+        products.forEach((p: any) => {
             // Determine Category: Collection > Product Type > 'Sin Categoría'
             let category = productCollectionMap.get(p.id);
             if (!category) category = p.product_type;
             if (!category) category = 'Sin Colección';
 
-            return {
-                name: p.title,
-                sku: p.variants?.[0]?.sku || `SHOPIFY-${p.id}`,
-                image_url: p.image?.src || null,
-                category: category,
-            };
+            // Iterate through ALL variants of this product
+            if (p.variants && p.variants.length > 0) {
+                p.variants.forEach((variant: any) => {
+                    // Build the variety name: Product Title + Variant Title (if exists and not "Default Title")
+                    let varietyName = p.title;
+                    if (variant.title && variant.title !== 'Default Title') {
+                        varietyName = `${p.title} - ${variant.title}`;
+                    }
+
+                    varietiesToInsert.push({
+                        name: varietyName,
+                        sku: variant.sku || `SHOPIFY-${p.id}-${variant.id}`,
+                        image_url: variant.image_id 
+                            ? p.images?.find((img: any) => img.id === variant.image_id)?.src 
+                            : p.image?.src || null,
+                        category: category,
+                    });
+                });
+            } else {
+                // Fallback: if no variants, save the product itself
+                varietiesToInsert.push({
+                    name: p.title,
+                    sku: `SHOPIFY-${p.id}`,
+                    image_url: p.image?.src || null,
+                    category: category,
+                });
+            }
         });
 
         if (varietiesToInsert.length > 0) {
