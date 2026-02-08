@@ -16,6 +16,23 @@ export default function CompromisoClient({ initialRows, initialDate }: { initial
     const [searchTerm, setSearchTerm] = useState('');
     const [isPending, startTransition] = useTransition();
 
+    // Local state for rows to enable real-time updates without server roundtrip for every keystroke
+    const [rows, setRows] = useState(initialRows);
+
+    // Update local rows when initialRows changes (e.g. date change)
+    useMemo(() => {
+        setRows(initialRows);
+    }, [initialRows]);
+
+    const handleUpdateRowQty = (commitmentId: string, newQty: number) => {
+        setRows(prev => prev.map(r => {
+            if (r.commitmentId === commitmentId) {
+                return { ...r, qty: newQty };
+            }
+            return r;
+        }));
+    };
+
     // Extract categories dynamically from the actual data (Faceted Search)
     const categories = useMemo(() => {
         const unique = new Set(initialRows.map(r => r.category).filter(Boolean));
@@ -71,14 +88,14 @@ export default function CompromisoClient({ initialRows, initialDate }: { initial
         });
     };
 
-    // Calculate Stats based on initialRows
+    // Calculate Stats based on local rows (real-time)
     // We filter by client-side Category selection
     const visibleRows = useMemo(() => {
-        return initialRows.filter(row => 
+        return rows.filter(row => 
             row.product.toLowerCase().includes(searchTerm.toLowerCase()) &&
             (selectedCategories.length === 0 || selectedCategories.includes(row.category))
         );
-    }, [initialRows, searchTerm, selectedCategories]);
+    }, [rows, searchTerm, selectedCategories]);
 
     const stats = useMemo(() => {
         const totalDemand = visibleRows.reduce((acc, row) => acc + (row.demand || 0), 0);
@@ -86,12 +103,20 @@ export default function CompromisoClient({ initialRows, initialDate }: { initial
         const totalOrders = visibleRows.length; 
         
         const compliance = totalDemand > 0 ? (totalCaptured / totalDemand) * 100 : 0;
+        
+        // Progress Alert Calculation
+        const filledItems = visibleRows.filter(r => r.qty > 0).length;
+        const totalItems = visibleRows.length;
+        const pendingItems = totalItems - filledItems;
 
         return {
             totalOrders,
             totalDemand,
             totalCaptured,
-            compliance: compliance.toFixed(1)
+            compliance: compliance.toFixed(1),
+            filledItems,
+            totalItems,
+            pendingItems
         };
     }, [visibleRows]);
 
@@ -201,6 +226,39 @@ export default function CompromisoClient({ initialRows, initialDate }: { initial
 
             {/* Main Content - Forced Light Mode */}
             <div className="flex-1 w-full min-w-0">
+                {/* Progress Alert */}
+                <div className={cn(
+                    "mb-6 p-4 rounded-xl border flex items-center justify-between gap-4 transition-colors",
+                    stats.pendingItems > 0 
+                        ? "bg-orange-50 border-orange-200 text-orange-900" 
+                        : "bg-green-50 border-green-200 text-green-900"
+                )}>
+                    <div className="flex items-center gap-3">
+                        {stats.pendingItems > 0 ? (
+                            <div className="bg-orange-100 p-2 rounded-full">
+                                <Loader2 className="size-5 text-orange-600 animate-spin-slow" />
+                            </div>
+                        ) : (
+                            <div className="bg-green-100 p-2 rounded-full">
+                                <CheckCircle className="size-5 text-green-600" />
+                            </div>
+                        )}
+                        <div>
+                            <h4 className="font-bold text-sm">
+                                {stats.pendingItems > 0 ? 'Faltan datos por capturar' : '¡Excelente! Captura completa'}
+                            </h4>
+                            <p className="text-xs opacity-80">
+                                {stats.pendingItems > 0 
+                                    ? `Haz completado ${stats.filledItems} de ${stats.totalItems} variedades. Te faltan ${stats.pendingItems}.` 
+                                    : `Has registrado cantidades para todas las ${stats.totalItems} variedades.`}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="text-right">
+                        <span className="text-2xl font-black">{stats.filledItems}/{stats.totalItems}</span>
+                    </div>
+                </div>
+
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
                     <div>
                         <div className="flex items-center gap-2 mb-2">
@@ -251,7 +309,7 @@ export default function CompromisoClient({ initialRows, initialDate }: { initial
                     </div>
                     <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                         <div className="flex items-center justify-between mb-3">
-                            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">A Surtir</span>
+                            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Enviado</span>
                             <ClipboardCheck className="text-secondary size-5" />
                         </div>
                         <div className="flex items-baseline gap-2">
@@ -309,7 +367,11 @@ export default function CompromisoClient({ initialRows, initialDate }: { initial
                                     </tr>
                                 ) : (
                                     visibleRows.map((row, idx) => (
-                                        <Row key={row.id || idx} row={row} />
+                                        <Row 
+                                            key={row.id || idx} 
+                                            row={row} 
+                                            onUpdateQty={handleUpdateRowQty}
+                                        />
                                     ))
                                 )}
                             </tbody>
@@ -324,23 +386,30 @@ export default function CompromisoClient({ initialRows, initialDate }: { initial
     );
 }
 
-function Row({ row }: { row: any }) {
+function Row({ row, onUpdateQty }: { row: any, onUpdateQty: (id: string, qty: number) => void }) {
     const [expanded, setExpanded] = useState(false);
-    const [qty, setQty] = useState(row.qty);
+    // Remove local state in favor of prop-driven state for immediate UI updates
+    // const [qty, setQty] = useState(row.qty); 
     const [isPending, startTransition] = useTransition();
 
     const handleQtyChange = (val: string) => {
-        const num = parseInt(val) || 0;
-        setQty(num);
+        const num = val === '' ? 0 : parseInt(val);
+        if (isNaN(num)) return;
+        
+        // Immediate UI update via parent state
+        onUpdateQty(row.commitmentId, num);
+        
+        // Debounced or separate effect for server save could be better, 
+        // but for now we trust the user won't type 1000 characters per second.
+        // Actually, firing server action on every stroke is bad. 
+        // We should keep the server update on BLUR, but UI update immediate.
     };
 
     const handleBlur = () => {
-        if (qty === row.qty) return; // No change
-        
         startTransition(async () => {
             try {
-                // Now relying on commitmentId which we added to page.tsx
-                await updateCommitment(row.commitmentId, qty);
+                // Save to server
+                await updateCommitment(row.commitmentId, row.qty);
             } catch (e) {
                 console.error("Update failed", e);
             }
@@ -386,7 +455,7 @@ function Row({ row }: { row: any }) {
                     <div className="relative flex items-center justify-center">
                         <input 
                             type="number"
-                            value={qty || ''} 
+                            value={row.qty || ''} 
                             placeholder=""
                             onChange={(e) => handleQtyChange(e.target.value)}
                             onBlur={handleBlur}
@@ -402,9 +471,9 @@ function Row({ row }: { row: any }) {
                 <td className="py-4 px-6 text-right tabular-nums">
                     <span className={cn(
                         "text-xs font-bold px-1.5 py-0.5 rounded",
-                        (qty - row.demand) < 0 ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"
+                        (row.qty - row.demand) < 0 ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"
                     )}>
-                        {(qty - row.demand) > 0 ? '+' : ''}{qty - row.demand}
+                        {(row.qty - row.demand) > 0 ? '+' : ''}{row.qty - row.demand}
                     </span>
                 </td>
                 <td className="py-4 px-6">
@@ -421,10 +490,10 @@ function Row({ row }: { row: any }) {
                 <td className="py-4 px-6">
                     <div className="flex items-center gap-3">
                         <div className="flex-1 min-w-[60px] h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                            <div className="h-full bg-accent" style={{ width: `${row.demand > 0 ? Math.min((qty / row.demand) * 100, 100) : 0}%` }}></div>
+                            <div className="h-full bg-accent" style={{ width: `${row.demand > 0 ? Math.min((row.qty / row.demand) * 100, 100) : 0}%` }}></div>
                         </div>
                         <span className="text-xs font-mono font-medium text-slate-600">
-                            {row.demand > 0 ? Math.round((qty / row.demand) * 100) : 0}%
+                            {row.demand > 0 ? Math.round((row.qty / row.demand) * 100) : 0}%
                         </span>
                     </div>
                 </td>
